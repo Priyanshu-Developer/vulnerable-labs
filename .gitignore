@@ -1,0 +1,30 @@
+**/node_modules
+
+# Next.js build
+**/.next
+
+# Generic build output
+**/dist
+**/build
+**/out
+
+# Coverage
+**/coverage
+
+# Logs
+**/*.log
+**/node_modules
+
+# Next.js build
+**/.next
+
+# Generic build output
+**/dist
+**/build
+**/out
+
+# Coverage
+**/coverage
+
+# Logs
+**/*.log

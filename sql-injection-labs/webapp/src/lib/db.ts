@@ -1,0 +1,12 @@
+import { Pool } from 'pg';
+
+const pool = new Pool({
+  user: process.env.POSTGRES_USER || 'postgres',
+  host: process.env.POSTGRES_HOST || '127.0.0.1', // ✅ will use "db" from docker-compose
+  database: process.env.POSTGRES_DB || 'sql_injection_labs',
+  password: process.env.POSTGRES_PASSWORD || 'password',
+  port: Number(process.env.POSTGRES_PORT) || 5432,
+  
+});
+
+export default pool;

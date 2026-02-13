@@ -24,8 +24,6 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ success: true, data }, { status: 200 });
   } catch (error: unknown) {
     const message = error instanceof Error ? error.message : "Unknown database error";
-    console.error("Products API error:", error);
-    // 🚨 Error leakage to support error-based SQLi learning.
     return NextResponse.json(
       { success: false, error: message },
       { status: 500 }

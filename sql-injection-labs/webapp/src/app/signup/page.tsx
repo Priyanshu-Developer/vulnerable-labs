@@ -13,7 +13,7 @@ export default function SignUpPage() {
         Full name
         <input
           type="text"
-          className="mt-1 w-full rounded-xl border border-[var(--line)] bg-white px-3 py-2 outline-none focus:border-[var(--brand)]"
+          className="mt-1 w-full rounded-xl border border-(--line) bg-white px-3 py-2 outline-none focus:border-(--brand)"
           placeholder="Jane Doe"
         />
       </label>
@@ -21,7 +21,7 @@ export default function SignUpPage() {
         Email
         <input
           type="email"
-          className="mt-1 w-full rounded-xl border border-[var(--line)] bg-white px-3 py-2 outline-none focus:border-[var(--brand)]"
+          className="mt-1 w-full rounded-xl border border-(--line) bg-white px-3 py-2 outline-none focus:border-(--brand)"
           placeholder="you@example.com"
         />
       </label>
@@ -29,7 +29,7 @@ export default function SignUpPage() {
         Password
         <input
           type="password"
-          className="mt-1 w-full rounded-xl border border-[var(--line)] bg-white px-3 py-2 outline-none focus:border-[var(--brand)]"
+          className="mt-1 w-full rounded-xl border border-(--line) bg-white px-3 py-2 outline-none focus:border-(--brand)"
           placeholder="Create a secure password"
         />
       </label>

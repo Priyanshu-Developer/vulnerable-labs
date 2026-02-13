@@ -2,7 +2,7 @@ import Link from "next/link";
 
 export default function Footer() {
   return (
-    <footer className="mt-16 border-t border-[var(--line)] bg-[#fff8eb]">
+    <footer className="mt-16 border-t border-(--line) bg-[#fff8eb]">
       <div className="container-width grid gap-8 py-12 md:grid-cols-3">
         <div>
           <p className="text-lg font-black" style={{ fontFamily: "var(--font-playfair)" }}>

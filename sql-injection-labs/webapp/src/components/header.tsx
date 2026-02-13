@@ -2,7 +2,7 @@ import Link from "next/link";
 
 export default function Header() {
   return (
-    <header className="sticky top-0 z-20 border-b border-[var(--line)] bg-[#fffdf8]/90 backdrop-blur">
+    <header className="sticky top-0 z-20 border-b border-(--line) bg-[#fffdf8]/90 backdrop-blur">
       <div className="container-width flex items-center justify-between py-4">
         <Link href="/" className="font-black tracking-tight text-xl" style={{ fontFamily: "var(--font-playfair)" }}>
           AURORA Market

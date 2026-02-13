@@ -30,7 +30,7 @@ export default function AuthShell({
         <p className="mt-2 text-sm text-muted">{subtitle}</p>
         <div className="mt-6 space-y-4">{children}</div>
         <p className="mt-6 text-sm text-muted">
-          {footerText} <Link href={footerLinkHref} className="font-bold text-[var(--brand)]">{footerLinkLabel}</Link>
+          {footerText} <Link href={footerLinkHref} className="font-bold text-(--brand)">{footerLinkLabel}</Link>
         </p>
       </section>
     </main>

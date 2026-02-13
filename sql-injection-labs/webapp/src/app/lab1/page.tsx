@@ -2,6 +2,7 @@
 import Link from "next/link";
 import AuthShell from "@/components/auth-shell";
 import { useState, type FormEventHandler } from "react";
+import Greeting from "@/components/greeting";
 
 export default function SignInMain() {
   const [username, setUsername] = useState("");
@@ -10,6 +11,7 @@ export default function SignInMain() {
   const [showBothQueries, setShowBothQueries] = useState(true);
   const [statusMessage, setStatusMessage] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [openDialog, setOpenDialog] = useState(false);
 
   const secureQuery = "SELECT * FROM users WHERE username = $1 AND password = $2";
   const secureParams = [username, password];
@@ -21,7 +23,7 @@ export default function SignInMain() {
     setIsSubmitting(true);
 
     try {
-      const endpoint = `/api/auth/lab1/${isSecureMode ? "secure" : "unsecure"}`;
+      const endpoint = `/api/lab1/auth/${isSecureMode ? "secure" : "unsecure"}`;
       const response = await fetch(endpoint, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -29,6 +31,17 @@ export default function SignInMain() {
       });
 
       const data = await response.json();
+      if (response.status === 200 && isSecureMode === false) {
+        const response2 = await fetch("/api/progress", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ lab_name: "lab1" }),
+        });
+        await response2.text();
+        setStatusMessage(`${data.message}`);
+        setOpenDialog(true);
+        return;
+      }
       setStatusMessage(data.message || data.error || "Request completed.");
     } catch {
       setStatusMessage("Unable to sign in right now.");
@@ -105,14 +118,14 @@ export default function SignInMain() {
         {(showBothQueries || isSecureMode) && (
           <div className={`rounded-lg border px-3 py-2 ${isSecureMode ? "border-(--brand) bg-[#f3fbf9]" : "border-(--line)"}`}>
             <p className="mb-1 text-xs font-semibold text-(--brand)">Secured query</p>
-            <code className="block whitespace-pre-wrap break-words text-xs">{secureQuery}</code>
+            <code className="block whitespace-pre-wrap wrap-break-words text-xs">{secureQuery}</code>
             <p className="mt-2 text-xs text-muted">Params: [{secureParams.map((value) => `"${value}"`).join(", ")}]</p>
           </div>
         )}
         {(showBothQueries || !isSecureMode) && (
           <div className={`rounded-lg border px-3 py-2 ${!isSecureMode ? "border-amber-400 bg-amber-50" : "border-(--line)"}`}>
             <p className="mb-1 text-xs font-semibold text-amber-700">Unsecured query</p>
-            <code className="block whitespace-pre-wrap break-words text-xs">{unsecureQuery}</code>
+            <code className="block whitespace-pre-wrap wrap-break-words text-xs">{unsecureQuery}</code>
           </div>
         )}
       </section>
@@ -124,6 +137,7 @@ export default function SignInMain() {
       <Link href="/forgot-password" className="block text-center text-sm font-semibold text-(--brand)">
         Forgot your password?
       </Link>
+      <Greeting open={openDialog} onOpenChange={setOpenDialog} link={"/lab2"}/>
     </AuthShell>
   );
 }

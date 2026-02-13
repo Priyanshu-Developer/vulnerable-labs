@@ -3,6 +3,7 @@
 import { FormEvent, useCallback, useEffect, useMemo, useState } from "react";
 import Header from "@/components/header";
 import Footer from "@/components/footer";
+import Greeting from "@/components/greeting";
 
 type Product = {
   id: number;
@@ -15,7 +16,7 @@ type Product = {
 
 const categoryOptions = ["electronics", "clothing", "books", "home", "toys"];
 
-export default function ProductsPage() {
+export default function Lab2Page() {
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -26,6 +27,7 @@ export default function ProductsPage() {
   const [activeSort, setActiveSort] = useState("featured");
   const [isSecuredMode, setIsSecureMode] = useState(false);
   const [showBothQueries, setShowBothQueries] = useState(true);
+  const [openDialog, setOpenDialog] = useState(false);
 
   const fetchProducts = useCallback(async (search: string) => {
     setLoading(true);
@@ -45,7 +47,16 @@ export default function ProductsPage() {
 
       setProducts(payload.data || []);
     } catch (fetchError) {
-      console.error(fetchError);
+      fetch("/api/progress", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ lab_name: "lab2" }),
+      }).catch((err) => {
+        console.error("Failed to update progress:", err);
+      }).then(() => {
+        setOpenDialog(true);
+      });
+
       setProducts([]);
       setError(fetchError instanceof Error ? fetchError.message : "Unable to load products right now.");
     } finally {
@@ -136,13 +147,13 @@ export default function ProductsPage() {
             <input
               value={searchDraft}
               onChange={(event) => setSearchDraft(event.target.value)}
-              className="rounded-xl border border-[var(--line)] bg-white px-3 py-2 text-sm outline-none focus:border-[var(--brand)]"
+              className="rounded-xl border border-(--line) bg-white px-3 py-2 text-sm outline-none focus:border-(--brand)"
               placeholder="Search products"
             />
             <select
               value={categoryDraft}
               onChange={(event) => setCategoryDraft(event.target.value)}
-              className="rounded-xl border border-[var(--line)] bg-white px-3 py-2 text-sm outline-none focus:border-[var(--brand)]"
+              className="rounded-xl border border-(--line) bg-white px-3 py-2 text-sm outline-none focus:border-(--brand)"
             >
               <option value="all">All categories</option>
               {categoryOptions.map((category) => (
@@ -154,7 +165,7 @@ export default function ProductsPage() {
             <select
               value={sortDraft}
               onChange={(event) => setSortDraft(event.target.value)}
-              className="rounded-xl border border-[var(--line)] bg-white px-3 py-2 text-sm outline-none focus:border-[var(--brand)]"
+              className="rounded-xl border border-(--line) bg-white px-3 py-2 text-sm outline-none focus:border-(--brand)"
             >
               <option value="featured">Most popular</option>
               <option value="name">Name: A-Z</option>
@@ -186,7 +197,7 @@ export default function ProductsPage() {
             {(showBothQueries || !isSecuredMode) && (
               <div className={`rounded-lg border px-3 py-2 ${!isSecuredMode ? "border-amber-400 bg-amber-50" : "border-(--line)"}`}>
                 <p className="mb-1 text-xs font-semibold text-amber-700">Unsecured query</p>
-                <code className="block whitespace-pre-wrap break-words text-xs">{unsecureQuery}</code>
+                <code className="block whitespace-pre-wrap wrap-break-words text-xs">{unsecureQuery}</code>
               </div>
             )}
           </section>
@@ -229,6 +240,7 @@ export default function ProductsPage() {
         </section>
       </main>
       <Footer />
+      <Greeting open={openDialog} onOpenChange={setOpenDialog} link="/lab3"/>
     </div>
   );
 }

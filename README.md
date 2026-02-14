@@ -1,90 +1,141 @@
 # Vulnerable Attack Labs
 
-An open-source, intentionally vulnerable lab platform for learning web application attacks through hands-on practice.
+An intentionally vulnerable training platform for learning web security through hands-on labs.
 
-This project is designed as a multi-series roadmap, where each series focuses on one attack class with progressively harder labs.
-The first published track is **SQL Injection** with **32 labs** from fundamentals to cutting-edge scenarios.
-
-## Introduction
-
-This repository helps learners move from basic payloads to realistic exploitation patterns in controlled environments.
-Each lab emphasizes both offense (how attacks work) and defense (how to fix them correctly), making it suitable for students, developers, and security engineers.
+Current focus: **SQL Injection** track.
 
 ## Important Disclaimer
 
-This repository is for **authorized security training only**.
+For authorized training only.
 
-- Run labs only in local or isolated environments.
-- Never test these techniques against systems you do not own or have written permission to assess.
-- The maintainers are not responsible for misuse.
+- Run only in local/isolated environments.
+- Do not test against systems without explicit permission.
+- Maintainers are not responsible for misuse.
 
-## Project Scope
+## Job Done Till Now
 
-- Multi-attack lab roadmap (SQLi first, additional attack tracks planned)
-- Realistic vulnerable app flows for practical training
-- Progressive difficulty from beginner to advanced
-- Secure coding remediation guidance alongside exploitation
+Implemented in this repository today:
 
-## Current Track
+- SQL Injection lab platform built in a single Next.js app (`sql-injection-labs/webapp`).
+- PostgreSQL-backed data layer and seed script (`users`, `progress`, `products`, and enum `category`).
+- Progress unlock flow (`lab1 -> lab2 -> lab3`) via `/api/progress`.
+- Lab 1 (Login bypass):
+  - Vulnerable endpoint: `/api/lab1/auth/unsecure`
+  - Secure endpoint: `/api/lab1/auth/secure`
+- Lab 2 (Error-based SQLi in product search):
+  - Vulnerable endpoint: `/api/lab2/products/unsecured`
+  - Secure endpoint: `/api/lab2/products/secured`
+- Lab 3 (UNION-based SQLi in product search):
+  - Vulnerable endpoint: `/api/lab3/products/unsecure`
+  - Secure endpoint: `/api/lab3/products/secure`
+- UI for secure/unsecure mode toggle and realtime SQL query preview in labs.
 
-- SQL Injection Series: 32 labs
-
-## Project Goals
-
-- Teach SQLi from fundamentals to advanced exploitation.
-- Provide practical, hands-on vulnerable scenarios.
-- Help learners understand attacker mindset and defensive remediation.
-- Offer a structured progression for students, security engineers, and trainers.
+Planned but not implemented yet: labs **4-32**.
 
 ## Tech Stack
 
-- API: `Node.js`, `TypeScript`, `Express`, `PostgreSQL`
-- Web App: `Next.js`, `React`, `TypeScript`
+- Frontend + API: `Next.js 16`, `React 19`, `TypeScript`
+- Database: `PostgreSQL`
+- Runtime/Package manager: `Node.js`, `pnpm`
+- Container setup: `docker-compose`
 
 ## Repository Structure
 
-- `sql-injection-labs/api` - Vulnerable API endpoints and lab routes
-- `sql-injection-labs/webapp` - Frontend exercises and challenge UI
-- `README.md` - Project overview and lab roadmap
+- `README.md` - Project overview and setup instructions
+- `sql-injection-labs/docker-compose.yml` - DB + webapp container setup
+- `sql-injection-labs/webapp` - Next.js app with lab pages and API routes
+- `sql-injection-labs/webapp/src/lib/initlize-db.js` - DB initialization and seed script
 
-## Quick Start
+## Running Instructions
 
-### 1. Clone repository
+### Option 1: Run with Docker (recommended)
+
+1. Go to compose directory:
 
 ```bash
-git clone <your-repo-url>
-cd labs/sql-injection-labs
+cd sql-injection-labs
 ```
 
-### 2. Run API
+2. Build and start services:
 
 ```bash
-cd api
+docker compose up --build
+```
+
+3. Open:
+
+- App: `http://localhost:3000`
+- PostgreSQL host port: `localhost:5433`
+
+4. Stop:
+
+```bash
+docker compose down
+```
+
+Notes:
+
+- Database is initialized on startup by container entrypoint.
+- Default DB credentials are defined in `sql-injection-labs/docker-compose.yml`.
+
+### Option 2: Run locally (webapp + your own Postgres)
+
+1. Start PostgreSQL and create database:
+
+- DB name: `sql_injection_labs`
+- User: `postgres`
+- Password: `password`
+- Port: `5432`
+
+2. Go to webapp:
+
+```bash
+cd sql-injection-labs/webapp
+```
+
+3. Install dependencies:
+
+```bash
 pnpm install
+```
+
+4. Export DB env vars (if needed):
+
+```bash
+export POSTGRES_HOST=127.0.0.1
+export POSTGRES_PORT=5432
+export POSTGRES_USER=postgres
+export POSTGRES_PASSWORD=password
+export POSTGRES_DB=sql_injection_labs
+```
+
+5. Initialize database:
+
+```bash
+pnpm run dev-init-db
+```
+
+6. Start app:
+
+```bash
 pnpm dev
 ```
 
-API default URL: `http://localhost:3000`
+7. Open:
 
-### 3. Run Web App
+- `http://localhost:3000`
+- Start lab from `http://localhost:3000/lab1`
 
-```bash
-cd ../webapp
-pnpm install
-pnpm dev
-```
+## Current Lab Status
 
-Web app default URL: `http://localhost:3000` or Next.js-assigned port if occupied.
+- `Lab 1`: implemented
+- `Lab 2`: implemented
+- `Lab 3`: implemented
+- `Lab 4-32`: pending
 
-## Current Implementation Status
+## Planned Curriculum (32 Labs)
 
-- Implemented: Initial SQLi login lab route (`auth-routes-lab1.ts`)
-- In progress: Additional lab routes and progress tracking integration
-- Planned: Full 32-lab curriculum below
-
-## SQL Injection Curriculum (32 Labs)
-
-### LEVEL 1 - Fundamentals (8 Labs)
+### Level 1 - Fundamentals
 
 1. Basic Login Bypass
 2. Error-Based SQL Injection
@@ -95,7 +146,7 @@ Web app default URL: `http://localhost:3000` or Next.js-assigned port if occupie
 7. SQLi in Search Function
 8. SQLi in URL Parameters
 
-### LEVEL 2 - Blind SQL Injection (6 Labs)
+### Level 2 - Blind SQL Injection
 
 9. Boolean Based Blind SQLi
 10. Time Based Blind SQLi
@@ -104,7 +155,7 @@ Web app default URL: `http://localhost:3000` or Next.js-assigned port if occupie
 13. Blind SQLi in HTTP Headers
 14. Conditional Error SQLi
 
-### LEVEL 3 - Filter & WAF Bypass (6 Labs)
+### Level 3 - Filter & WAF Bypass
 
 15. Basic Blacklist Bypass
 16. Comment Injection
@@ -113,7 +164,7 @@ Web app default URL: `http://localhost:3000` or Next.js-assigned port if occupie
 19. JSON SQL Injection
 20. Prepared Statement Misuse
 
-### LEVEL 4 - Advanced SQL Injection (5 Labs)
+### Level 4 - Advanced SQL Injection
 
 21. Second Order SQL Injection
 22. Stored Procedure Injection
@@ -121,75 +172,36 @@ Web app default URL: `http://localhost:3000` or Next.js-assigned port if occupie
 24. Stacked Query Injection
 25. SQLi via File Upload Metadata
 
-### LEVEL 5 - Elite / Real-World Exploitation (5 Labs)
+### Level 5 - Real-World Exploitation
 
 26. Out-of-Band SQL Injection
-27. SQLi -> Remote Code Execution
-28. SQLi -> Privilege Escalation
-29. SQLi -> Large Scale Data Exfiltration
-30. SQLi + Enterprise WAF Simulation
+27. SQLi to Remote Code Execution
+28. SQLi to Privilege Escalation
+29. SQLi to Large Scale Data Exfiltration
+30. SQLi with Enterprise WAF Simulation
 
-### LEVEL 6 - Research / Cutting Edge (2 Labs)
+### Level 6 - Research/Cutting Edge
 
-31. SQL Injection + Race Condition
+31. SQL Injection with Race Condition
 32. AI-Assisted SQLi Detection Bypass
-
-## New Labs Added
-
-### Lab 31 - SQL Injection + Race Condition
-
-Focus areas:
-- Parallel request exploitation
-- Transaction locking abuse
-- Timing-based injection chaining
-
-Example scenario:
-- Multiple payment requests submitted simultaneously
-- SQLi modifies balance validation query
-- Race condition bypasses balance checks
-
-### Lab 32 - AI-Assisted SQLi Detection Bypass
-
-Focus areas:
-- Prompt obfuscation
-- Semantic payload rewriting
-- Polyglot payloads
-- Context-aware injection strategies
-
-Example concepts:
-- Bypassing AI input filters and LLM/WAF pattern detection
-- Rewriting payloads to evade semantic security checks
-
-## Learning Outcomes
-
-By completing this series, learners should be able to:
-
-- Identify SQLi attack surfaces in web applications.
-- Exploit common and advanced SQLi patterns in controlled labs.
-- Automate blind extraction techniques.
-- Understand WAF/filter bypass tradeoffs.
-- Apply secure coding fixes such as parameterized queries and robust validation.
 
 ## Contribution Guidelines
 
-Contributions are welcome for:
-
-- New lab scenarios
-- Better challenge realism
-- Fixes to setup/dev experience
-- Documentation improvements
-
-Suggested workflow:
-
-1. Fork the repository
-2. Create a feature branch
-3. Add or update a lab
-4. Submit a pull request with a clear description and reproduction steps
-
-## Responsible Use Policy
-
-This project is intentionally vulnerable for educational reasons. If you discover unsafe defaults or accidental exposure vectors, open an issue responsibly and include mitigation guidance.
+1. Fork repository
+2. Create feature branch
+3. Add or improve lab
+4. Open pull request with clear reproduction steps
 
 ## License
 
-This project is open source. Add a `LICENSE` file (recommended: MIT) and update this section with the final license text.
+This project is licensed under a custom educational/research license in `LICENSE`.
+
+Copyright (c) 2026 Priyanshu Kumar Singh
+
+Key terms:
+
+- Educational, academic, and cybersecurity research use only.
+- No production deployment.
+- No commercial use, resale, or sublicensing for profit.
+- No public internet exposure of the vulnerable app.
+- Provided "AS IS" without warranty; author liability is disclaimed.

@@ -21,11 +21,14 @@ export async function GET(req: NextRequest) {
       price: Number(row.price),
     }));
 
-    return NextResponse.json({ success: true, data }, { status: 200 });
+    return NextResponse.json({ success: true, data, query: query.trim() }, { status: 200 });
   } catch (error: unknown) {
     const message = error instanceof Error ? error.message : "Unknown database error";
+    const search = req.nextUrl.searchParams.get("search")?.trim() || "";
+    const whereClause = search ? `WHERE name ILIKE '%${search}%'` : "";
+    const errorQuery = `SELECT id, name, price, description, image_url, category::text AS category FROM products ${whereClause}`.trim();
     return NextResponse.json(
-      { success: false, error: message },
+      { success: false, error: message, query: errorQuery },
       { status: 500 }
     );
   }

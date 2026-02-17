@@ -19,10 +19,10 @@ export async function GET(req: NextRequest) {
       price: Number(row.price),
     }));
 
-    return NextResponse.json({ success: true, data }, { status: 200 });
+    return NextResponse.json({ success: true, data, query }, { status: 200 });
   } catch (error: unknown) {
     const message = error instanceof Error ? error.message : "Unknown database error";
     console.error("Lab3 unsecure products API error:", error);
-    return NextResponse.json({ success: false, error: message }, { status: 500 });
+    return NextResponse.json({ success: false, error: message, query }, { status: 500 });
   }
 }

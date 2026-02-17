@@ -1,4 +1,4 @@
-import { NextRequest,NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import pool from "@/lib/db";
 
 export async function GET(req: NextRequest) {
@@ -13,7 +13,7 @@ export async function GET(req: NextRequest) {
   `;
 
   const queryParams = search ? [`%${search}%`] : [];
-  
+
   try {
     const result = await pool.query(query, queryParams);
     const data = result.rows.map((row) => ({
@@ -21,13 +21,13 @@ export async function GET(req: NextRequest) {
       price: Number(row.price),
     }));
 
-    return NextResponse.json({ success: true, data }, { status: 200 });
+    return NextResponse.json({ success: true, data, query: query.trim(), params: queryParams }, { status: 200 });
   } catch (error: unknown) {
     const message = error instanceof Error ? error.message : "Unknown database error";
     console.error("Products API error:", error);
     // 🚨 Error leakage to support error-based SQLi learning.
     return NextResponse.json(
-      { success: false, error: message },
+      { success: false, error: message, query: query.trim(), params: queryParams },
       { status: 500 }
     );
   }

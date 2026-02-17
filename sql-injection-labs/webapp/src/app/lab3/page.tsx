@@ -1,8 +1,8 @@
 "use client";
 
-import { FormEvent, useCallback, useEffect, useMemo, useState } from "react";
-import Header from "@/components/header";
-import Footer from "@/components/footer";
+import { useState, useEffect } from "react";
+import LabLayout from "@/components/lab-layout";
+import SuccessDialog from "@/components/success-dialog";
 
 type Product = {
   id: number;
@@ -13,279 +13,203 @@ type Product = {
   image_url: string | null;
 };
 
-const categoryOptions = ["all", "electronics", "clothing", "books", "home", "toys"];
-
-const unionPayloads = [
-  {
-    label: "Valid search",
-    value: "wireless",
-    note: "Baseline product search",
-  },
-  {
-    label: "UNION probe",
-    value: "' UNION SELECT 9999, current_user, 0, version(), NULL, 'system'--",
-    note: "Attempts to union DB metadata into product rows",
-  },
-  {
-    label: "Column mismatch",
-    value: "' UNION SELECT current_user--",
-    note: "Triggers SQL error to learn required column count",
-  },
-];
-
 export default function Lab3Page() {
+  const [searchQuery, setSearchQuery] = useState("");
+  const [isSecureMode, setIsSecureMode] = useState(false);
   const [products, setProducts] = useState<Product[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
-  const [searchDraft, setSearchDraft] = useState("");
-  const [sortDraft, setSortDraft] = useState("featured");
-  const [activeCategory, setActiveCategory] = useState("all");
-  const [activeSort, setActiveSort] = useState("featured");
-  const [isSecuredMode, setIsSecureMode] = useState(false);
-  const [showBothQueries, setShowBothQueries] = useState(true);
+  const [statusMessage, setStatusMessage] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+  const [showSuccess, setShowSuccess] = useState(false);
+  const [executedQuery, setExecutedQuery] = useState("");
+  const [queryParams, setQueryParams] = useState<any[]>([]);
 
-  const fetchProducts = useCallback(
-    async (search: string) => {
-      setLoading(true);
-      setError("");
-      try {
-        const params = new URLSearchParams();
-        if (search.trim()) {
-          params.set("search", search.trim());
-        }
+  const hints = [
+    "UNION-based injection combines results from multiple SELECT queries.",
+    "First, determine the number of columns: ' ORDER BY 1-- then try 2, 3, etc.",
+    "Try: ' UNION SELECT NULL,NULL,NULL,NULL,NULL,NULL-- to match column count.",
+    "Extract data from other tables: ' UNION SELECT id,username,password,NULL,NULL,NULL FROM users--",
+    "Use information_schema to discover tables: ' UNION SELECT NULL,table_name,NULL,NULL,NULL,NULL FROM information_schema.tables--",
+  ];
 
-        const response = await fetch(
-          `/api/lab3/products/${isSecuredMode ? "secure" : "unsecure"}?${params.toString()}`,
-          { method: "GET" },
-        );
-        const payload = await response.json();
-
-        if (!response.ok || !payload.success) {
-          throw new Error(payload.error || "Failed to fetch products");
-        }
-
-        setProducts(payload.data || []);
-      } catch (fetchError) {
-        console.error(fetchError);
-        setProducts([]);
-        setError(fetchError instanceof Error ? fetchError.message : "Unable to load products right now.");
-      } finally {
-        setLoading(false);
-      }
-    },
-    [isSecuredMode],
-  );
-
+  // Update query display when inputs change
   useEffect(() => {
-    fetchProducts(searchDraft);
-  }, [fetchProducts, searchDraft]);
+    if (isSecureMode) {
+      setExecutedQuery("SELECT * FROM products WHERE name ILIKE $1");
+      setQueryParams([`%${searchQuery}%`]);
+    } else {
+      setExecutedQuery(
+        `SELECT * FROM products WHERE name ILIKE '%${searchQuery}%'`,
+      );
+      setQueryParams([]);
+    }
+  }, [searchQuery, isSecureMode]);
 
-  const filteredProducts = useMemo(() => {
-    const byCategory = products.filter((item) => {
-      if (activeCategory === "all") {
-        return true;
+  const handleSearch = async () => {
+    setStatusMessage("");
+    setIsLoading(true);
+
+    try {
+      const endpoint = `/api/lab3/products/${isSecureMode ? "secure" : "unsecure"}?search=${encodeURIComponent(searchQuery)}`;
+      const response = await fetch(endpoint);
+      const data = await response.json();
+
+      if (data.query) {
+        setExecutedQuery(data.query);
+        if (data.params) {
+          setQueryParams(data.params);
+        }
       }
-      return item.category.toLowerCase() === activeCategory;
-    });
 
-    if (activeSort === "price-low") {
-      return [...byCategory].sort((a, b) => a.price - b.price);
+      if (data.success) {
+        setProducts(data.data || []);
+        setStatusMessage(`✅ Found ${data.data?.length || 0} products`);
+
+        // Check if UNION attack was successful
+        if (!isSecureMode && searchQuery.toUpperCase().includes("UNION")) {
+          await fetch("/api/progress", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ lab_name: "lab3" }),
+          });
+          setShowSuccess(true);
+        }
+      } else {
+        setProducts([]);
+        setStatusMessage("❌ " + data.error);
+      }
+    } catch (error) {
+      setStatusMessage("❌ Unable to process request");
+    } finally {
+      setIsLoading(false);
     }
-
-    if (activeSort === "price-high") {
-      return [...byCategory].sort((a, b) => b.price - a.price);
-    }
-
-    if (activeSort === "name") {
-      return [...byCategory].sort((a, b) => a.name.localeCompare(b.name));
-    }
-
-    return byCategory;
-  }, [activeCategory, activeSort, products]);
-
-  const applyFilters = (event: FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-    const formData = new FormData(event.currentTarget);
-    const category = String(formData.get("category") || "all");
-    setActiveCategory(category);
-    setActiveSort(sortDraft);
-    fetchProducts(searchDraft);
   };
 
-  const searchValue = searchDraft.trim();
-  const secureQuery = `
-    SELECT id, name, price, description, image_url, category::text AS category
-    FROM products
-    ${searchValue ? "WHERE name ILIKE $1" : ""}
-  `.trim();
-  const secureParams = searchValue ? [`%${searchValue}%`] : [];
-  const unsecureQuery = `
-    SELECT id, name, price, description, image_url, category::text AS category
-    FROM products
-    ${searchValue ? `WHERE name ILIKE '%${searchValue}%'` : ""}
-  `.trim();
+  const handleSearchChange = (value: string) => {
+    setSearchQuery(value);
+    if (isSecureMode) {
+      setExecutedQuery("SELECT * FROM products WHERE name ILIKE $1");
+      setQueryParams([`%${value}%`]);
+    } else {
+      setExecutedQuery(`SELECT * FROM products WHERE name ILIKE '%${value}%'`);
+      setQueryParams([]);
+    }
+  };
 
   return (
-    <div className="min-h-screen">
-      <Header />
-      <main className="container-width py-12">
-        <section className="surface p-6 md:p-8">
-          <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
+    <>
+      <LabLayout
+        labNumber={3}
+        labTitle="UNION-Based SQL Injection"
+        labDescription="Master UNION-based attacks to combine results from multiple queries. Extract data from different tables by crafting UNION SELECT payloads."
+        difficulty="Intermediate"
+        hints={hints}
+        sqlQuery={executedQuery}
+        sqlParams={queryParams}
+        isSecureMode={isSecureMode}
+        onSecureModeToggle={() => setIsSecureMode(!isSecureMode)}
+      >
+        <div className="max-w-3xl mx-auto">
+          <h2 className="text-2xl font-bold mb-4">Product Search</h2>
+          <p className="text-muted mb-6">
+            Search for products and try UNION-based injection to retrieve data
+            from other tables. You'll need to match the column count and data
+            types correctly.
+          </p>
+
+          <div className="space-y-5">
             <div>
-              <h1 className="text-4xl font-black" style={{ fontFamily: "var(--font-playfair)" }}>
-                Lab 3: UNION-Based Product SQLi
-              </h1>
-              <p className="mt-2 text-muted">
-                Inject payloads into product search and compare unsecure string interpolation vs parameterized queries.
-              </p>
-            </div>
-            <div className="inline-flex items-center gap-2 bg-white px-2 py-1 text-xs font-bold">
-              <span className={`${isSecuredMode ? "text-(--brand)" : "text-muted"}`}>Secured</span>
-              <button
-                type="button"
-                aria-label="Toggle secured and unsecured mode"
-                aria-pressed={!isSecuredMode}
-                onClick={() => setIsSecureMode((prev) => !prev)}
-                className={`relative h-6 w-11 rounded-full transition ${
-                  isSecuredMode ? "bg-(--brand)" : "bg-amber-400"
-                }`}
-              >
-                <span
-                  className={`absolute top-0.5 h-5 w-5 rounded-full bg-white shadow transition ${
-                    isSecuredMode ? "left-0.5" : "left-[1.4rem]"
-                  }`}
+              <label className="block text-sm font-bold mb-2">
+                Search Query<span className="text-red-500">*</span>
+              </label>
+              <div className="flex gap-3">
+                <input
+                  type="text"
+                  value={searchQuery}
+                  onChange={(e) => handleSearchChange(e.target.value)}
+                  placeholder="Enter search (try UNION SELECT...)"
+                  className="flex-1 px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-(--brand) focus:outline-none transition"
                 />
-              </button>
-              <span className={`${!isSecuredMode ? "text-amber-700" : "text-muted"}`}>Unsecured</span>
-            </div>
-          </div>
-
-          <div className="mt-4 rounded-xl border border-(--line) bg-white p-3">
-            <p className="text-xs font-bold uppercase tracking-wide text-(--brand)">UNION payload helpers</p>
-            <div className="mt-2 flex flex-wrap gap-2">
-              {unionPayloads.map((payload) => (
                 <button
-                  key={payload.label}
-                  type="button"
-                  onClick={() => {
-                    setSearchDraft(payload.value);
-                    fetchProducts(payload.value);
-                  }}
-                  className="rounded-full border border-(--line) bg-slate-50 px-3 py-1 text-xs font-semibold text-slate-700 hover:bg-slate-100"
-                  title={payload.note}
+                  onClick={handleSearch}
+                  disabled={isLoading}
+                  className="px-8 py-3 bg-(--brand) text-white font-bold rounded-xl hover:bg-(--brand-strong) disabled:opacity-50 transition"
                 >
-                  {payload.label}
+                  {isLoading ? "Searching..." : "Search"}
                 </button>
-              ))}
+              </div>
             </div>
-          </div>
 
-          <form className="mt-6 grid gap-3 md:grid-cols-4" onSubmit={applyFilters}>
-            <input
-              value={searchDraft}
-              onChange={(event) => setSearchDraft(event.target.value)}
-              className="rounded-xl border border-(--line) bg-white px-3 py-2 text-sm outline-none focus:border-(--brand)"
-              placeholder="Search / inject payload"
-            />
-            <select
-              name="category"
-              value={activeCategory}
-              onChange={(event) => setActiveCategory(event.target.value)}
-              className="rounded-xl border border-(--line) bg-white px-3 py-2 text-sm outline-none focus:border-(--brand)"
-            >
-              {categoryOptions.map((category) => (
-                <option key={category} value={category}>
-                  {category === "all" ? "All categories" : category.charAt(0).toUpperCase() + category.slice(1)}
-                </option>
-              ))}
-            </select>
-            <select
-              value={sortDraft}
-              onChange={(event) => setSortDraft(event.target.value)}
-              className="rounded-xl border border-(--line) bg-white px-3 py-2 text-sm outline-none focus:border-(--brand)"
-            >
-              <option value="featured">Most popular</option>
-              <option value="name">Name: A-Z</option>
-              <option value="price-low">Price: low to high</option>
-              <option value="price-high">Price: high to low</option>
-            </select>
-            <button type="submit" className="brand-button primary">
-              Apply filters
-            </button>
-          </form>
-
-          <div className="mt-4 flex justify-end">
-            <button
-              type="button"
-              onClick={() => setShowBothQueries((prev) => !prev)}
-              className="rounded-full border border-(--line) bg-white px-3 py-1 text-xs font-bold text-(--brand)"
-            >
-              {showBothQueries ? "Show active query only" : "Show both queries"}
-            </button>
-          </div>
-
-          <section className="mt-3 space-y-2 rounded-xl border border-(--line) bg-white p-3">
-            <p className="text-xs font-bold uppercase tracking-wide text-(--brand)">Realtime SQL Preview</p>
-            {(showBothQueries || isSecuredMode) && (
+            {statusMessage && (
               <div
-                className={`rounded-lg border px-3 py-2 ${
-                  isSecuredMode ? "border-(--brand) bg-[#f3fbf9]" : "border-(--line)"
+                className={`p-4 rounded-xl border-2 text-sm font-semibold ${
+                  statusMessage.includes("✅")
+                    ? "bg-green-50 border-green-200 text-green-800"
+                    : "bg-red-50 border-red-200 text-red-800"
                 }`}
               >
-                <p className="mb-1 text-xs font-semibold text-(--brand)">Secured query</p>
-                <code className="block whitespace-pre-wrap wrap-break-words text-xs">{secureQuery}</code>
-                <p className="mt-2 text-xs text-muted">Params: [{secureParams.map((value) => `"${value}"`).join(", ")}]</p>
+                {statusMessage}
               </div>
             )}
-            {(showBothQueries || !isSecuredMode) && (
-              <div
-                className={`rounded-lg border px-3 py-2 ${
-                  !isSecuredMode ? "border-amber-400 bg-amber-50" : "border-(--line)"
-                }`}
+
+            {/* Products Display */}
+            {products.length > 0 && (
+              <div className="grid md:grid-cols-2 gap-4">
+                {products.map((product, idx) => (
+                  <div key={product.id || idx} className="surface p-4">
+                    <h3 className="font-bold text-lg">{product.name}</h3>
+                    <p className="text-sm text-muted mt-1">
+                      {product.category}
+                    </p>
+                    <p className="text-2xl font-black text-(--brand) mt-2">
+                      $
+                      {typeof product.price === "number"
+                        ? product.price.toFixed(2)
+                        : product.price || "0.00"}
+                    </p>
+                    {product.description && (
+                      <p className="text-sm text-gray-700 mt-2">
+                        {product.description}
+                      </p>
+                    )}
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+
+          <div className="mt-8 p-5 bg-blue-50 border-2 border-blue-200 rounded-xl">
+            <h3 className="font-bold text-blue-900 mb-2 flex items-center gap-2">
+              <svg
+                className="w-5 h-5"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
               >
-                <p className="mb-1 text-xs font-semibold text-amber-700">Unsecured query</p>
-                <code className="block whitespace-pre-wrap wrap-break-words text-xs">{unsecureQuery}</code>
-              </div>
-            )}
-          </section>
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                />
+              </svg>
+              Your Objective
+            </h3>
+            <p className="text-sm text-blue-900">
+              Use UNION SELECT to combine the product query results with data
+              from other tables. First find the correct column count, then
+              extract sensitive data like user credentials.
+            </p>
+          </div>
+        </div>
+      </LabLayout>
 
-          <p className="mt-4 text-sm text-muted">Showing {filteredProducts.length} products</p>
-          {loading ? <p className="mt-2 text-sm text-muted">Loading products...</p> : null}
-          {error ? <p className="mt-2 text-sm text-red-600">{error}</p> : null}
-        </section>
-
-        <section className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          {filteredProducts.map((item) => (
-            <article key={item.id} className="surface overflow-hidden">
-              <img
-                src={item.image_url || "/book.png"}
-                alt={item.name}
-                className="h-40 w-full object-cover"
-                onError={(event) => {
-                  event.currentTarget.onerror = null;
-                  event.currentTarget.src = "/book.png";
-                }}
-              />
-              <div className="p-4">
-                <p className="text-xs font-bold uppercase text-(--brand)">{item.category}</p>
-                <h2 className="mt-2 font-bold">{item.name}</h2>
-                {item.description ? <p className="mt-2 text-sm text-muted">{item.description}</p> : null}
-                <div className="mt-4 flex items-center justify-between">
-                  <p className="text-lg font-black">${item.price.toFixed(2)}</p>
-                  <button className="brand-button secondary px-3! py-2! text-xs">Add</button>
-                </div>
-              </div>
-            </article>
-          ))}
-          {!loading && filteredProducts.length === 0 ? (
-            <div className="surface col-span-full p-10 text-center">
-              <p className="text-lg font-bold">No products found</p>
-              <p className="mt-2 text-sm text-muted">Try a different search term or payload.</p>
-            </div>
-          ) : null}
-        </section>
-      </main>
-      <Footer />
-    </div>
+      <SuccessDialog
+        isOpen={showSuccess}
+        onClose={() => setShowSuccess(false)}
+        labNumber={3}
+        title="UNION-Based SQL Injection"
+        message="Excellent! You've successfully used UNION queries to extract data from other tables. This is a powerful technique for data exfiltration."
+      />
+    </>
   );
 }

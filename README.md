@@ -28,6 +28,12 @@ Implemented in this repository today:
 - Lab 3 (UNION-based SQLi in product search):
   - Vulnerable endpoint: `/api/lab3/products/unsecure`
   - Secure endpoint: `/api/lab3/products/secure`
+- Lab 4-8 (initial draft scaffolds):
+  - Lab 4 (Finding number of columns): `/lab4`, `/api/lab4/products/{unsecure|secure}`
+  - Lab 5 (Extracting DB metadata): `/lab5`, `/api/lab5/products/{unsecure|secure}`
+  - Lab 6 (String vs numeric SQLi): `/lab6`, `/api/lab6/products/{unsecure|secure}`
+  - Lab 7 (SQLi in search function): `/lab7`, `/api/lab7/products/{unsecure|secure}`
+  - Lab 8 (SQLi in URL parameters): `/lab8`, `/api/lab8/products/{unsecure|secure}`
 - UI for secure/unsecure mode toggle and realtime SQL query preview in labs.
 
 Planned but not implemented yet: labs **4-32**.
@@ -131,7 +137,8 @@ pnpm dev
 - `Lab 1`: implemented
 - `Lab 2`: implemented
 - `Lab 3`: implemented
-- `Lab 4-32`: pending
+- `Lab 4-8`: draft scaffolds implemented
+- `Lab 9-32`: pending
 
 ## Planned Curriculum (32 Labs)
 

@@ -117,13 +117,28 @@ const createProgressTable = async (client) => {
             ('lab7', 'locked'),
             ('lab8', 'locked'),
             ('lab9', 'locked'),
-            ('lab10', 'locked')
+            ('lab10', 'locked'),
+            ('lab11', 'locked')
             ON CONFLICT (lab_id) DO NOTHING;
         `);
         console.log("Progress table created successfully.");
     } catch (err) {
         console.error("Error creating progress table:", err);
     } 
+};
+
+const createSessionsTable = async (client) => {
+    try {
+        await client.query(`
+            CREATE TABLE IF NOT EXISTS sessions (
+                id SERIAL PRIMARY KEY,
+                cookie TEXT NOT NULL UNIQUE
+            );
+        `);
+        console.log("Sessions table created successfully.");
+    } catch (err) {
+        console.error("Error creating sessions table:", err);
+    }
 };
 
 
@@ -135,6 +150,7 @@ const initDB = async () => {
         await CreateProductsTable(client);
         await createFlagTable(client);
         await createProgressTable(client);
+        await createSessionsTable(client);
         console.log("Database initialized successfully.");
     } catch (err) {
         console.error("Error initializing database:", err);
@@ -144,5 +160,3 @@ const initDB = async () => {
 };
 
 initDB();
-
-

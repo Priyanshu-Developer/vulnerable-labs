@@ -239,10 +239,14 @@ Start with Lab 1: **http://localhost:3000/lab1**
 | 1     | Basic Login Bypass     | ✅       | ✅  | **Complete**   |
 | 2     | Error-Based SQLi       | ✅       | ✅  | **Complete**   |
 | 3     | UNION-Based SQLi       | ✅       | ✅  | **Complete**   |
-| 4     | Finding Column Count   | ✅       | ✅  | Draft Scaffold |
-| 5     | Extracting DB Metadata | ✅       | ✅  | Draft Scaffold |
-| 6     | String vs Numeric SQLi | ✅       | ✅  | Draft Scaffold |
-| 7-30  | Advanced Topics        | ⏳       | ⏳  | **Planned**    |
+| 4     | Finding Column Count   | ✅       | ✅  | **Complete**   |
+| 5     | Extracting DB Metadata | ✅       | ✅  | **Complete**   |
+| 6     | String vs Numeric SQLi | ✅       | ✅  | **Complete**   |
+| 7     | Boolean-Based Blind SQLi | ✅     | ✅  | **Complete**   |
+| 8     | Time-Based Blind SQLi  | ✅       | ✅  | **Complete**   |
+| 9     | Blind SQLi via Cookies | ✅       | ✅  | **Complete**   |
+| 10    | Blind SQLi in HTTP Headers | ✅   | ✅  | **Complete**   |
+| 11    | Conditional Error SQLi | ✅       | ✅  | **Complete**   |
 
 ---
 
@@ -259,16 +263,15 @@ Start with Lab 1: **http://localhost:3000/lab1**
 5. **Extracting Database Metadata** - Map database schema, tables, and columns
 6. **String vs Numeric Injection** - Understand different injection contexts
 
-### Level 2: Blind SQL Injection (Labs 7-12)
+### Level 2: Blind SQL Injection (Labs 7-11)
 
 **Master extraction techniques when you can't see direct output.**
 
 7. **Boolean-Based Blind SQLi** - Extract data based on true/false responses
 8. **Time-Based Blind SQLi** - Use database delays to infer information
-9. **Blind Data Extraction Automation** - Build scripts for efficient extraction
-10. **Blind SQLi via Cookies** - Exploit injection points in cookie values
-11. **Blind SQLi in HTTP Headers** - Attack User-Agent, Referer, and custom headers
-12. **Conditional Error SQLi** - Exploit error states for data extraction
+9. **Blind SQLi via Cookies** - Exploit injection points in cookie values
+10. **Blind SQLi in HTTP Headers** - Attack User-Agent, Referer, and custom headers
+11. **Conditional Error SQLi** - Exploit error states for data extraction
 
 ### Level 3: Filter & WAF Bypass (Labs 13-18)
 

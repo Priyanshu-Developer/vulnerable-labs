@@ -61,11 +61,32 @@ const tracks = [
     href: "/lab8",
     tier: "Expert+",
   },
+  {
+    title: "Lab 9: Blind SQL Injection via Cookies",
+    detail:
+      "Inject cookie values and use behavior differences to infer hidden data.",
+    href: "/lab9",
+    tier: "Expert+",
+  },
+  {
+    title: "Lab 10: Blind SQLi in HTTP Headers",
+    detail:
+      "Attack User-Agent, Referer, and custom headers to extract data through blind signals.",
+    href: "/lab10",
+    tier: "Master",
+  },
+  {
+    title: "Lab 11: Conditional Error SQLi",
+    detail:
+      "Craft payloads that intentionally error only on selected conditions to leak flag characters.",
+    href: "/lab11",
+    tier: "Master+",
+  },
 ];
 
 const stats = [
   { label: "Track", value: "HTB Style SQLi" },
-  { label: "Labs", value: "8 Missions" },
+  { label: "Labs", value: "11 Missions" },
   { label: "Flow", value: "Progressive" },
 ];
 
@@ -92,7 +113,7 @@ export default function MainPage() {
           transition={{ delay: 0.1, duration: 0.55 }}
           className="title"
         >
-          Eight offensive labs.
+          Eleven offensive labs.
           <span> One guided exploitation path.</span>
         </motion.h1>
 
@@ -102,8 +123,8 @@ export default function MainPage() {
           transition={{ delay: 0.2, duration: 0.55 }}
           className="subtitle"
         >
-          This track recreates Hack The Box style mission flow: brief, exploit,
-          extract token, submit flag, unlock next target.
+          This track recreates Hack The Box style mission flow from basic SQLi to
+          blind cookie/header attacks and conditional error extraction.
         </motion.p>
 
         <motion.div
@@ -192,6 +213,36 @@ export default function MainPage() {
           >
             Open Lab 8
           </Button>
+          <Button
+            as={Link}
+            href="/lab9"
+            variant="bordered"
+            radius="sm"
+            size="lg"
+            className="cta-secondary"
+          >
+            Open Lab 9
+          </Button>
+          <Button
+            as={Link}
+            href="/lab10"
+            variant="bordered"
+            radius="sm"
+            size="lg"
+            className="cta-secondary"
+          >
+            Open Lab 10
+          </Button>
+          <Button
+            as={Link}
+            href="/lab11"
+            variant="bordered"
+            radius="sm"
+            size="lg"
+            className="cta-secondary"
+          >
+            Open Lab 11
+          </Button>
         </motion.div>
 
         <div className="stats-row">
@@ -245,7 +296,7 @@ export default function MainPage() {
             <span />
           </div>
           <code className="terminal-line">
-            {"GET /api/challenges/url-parameters?id=1 OR 1=1 --"}
+            {"GET /api/lab10?id=1  // inject via User-Agent/Referer/X-Lab-Probe"}
           </code>
         </motion.div>
       </section>
